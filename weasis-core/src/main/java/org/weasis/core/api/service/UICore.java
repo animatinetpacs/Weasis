@@ -65,7 +65,7 @@ public final class UICore {
   public static final String CONFIRM_CLOSE = "weasis.confirm.closing";
   public static final String LINUX_WINDOWS_DECORATION = "weasis.linux.windows.decoration";
   private static final Logger LOGGER = LoggerFactory.getLogger(UICore.class);
-  private static final UICore INSTANCE = new UICore();
+  private static UICore INSTANCE;
   private final ToolBarContainer toolbarContainer;
   public final List<ViewerPlugin<?>> viewerPlugins;
   private final List<DataExplorerView> explorerPlugins;
@@ -136,8 +136,12 @@ public final class UICore {
     FileUtil.readProperties(new File(dataFolder, "persistence.properties"), localPersistence);
   }
 
+  private static class Holder {
+    private static final UICore INSTANCE = new UICore();
+  }
+
   public static UICore getInstance() {
-    return INSTANCE;
+    return Holder.INSTANCE;
   }
 
   private void readSystemPreferences(BundleContext context) {
