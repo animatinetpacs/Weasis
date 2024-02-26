@@ -1,0 +1,1 @@
+call mvn -DaltReleaseDeploymentRepository=main::https://archiva.animati.com.br/repository/main clean deploy
