@@ -10,6 +10,7 @@
 package org.weasis.dicom.codec.macro;
 
 import java.util.Collection;
+import java.util.Objects;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Sequence;
 
@@ -17,15 +18,39 @@ public class Module {
 
   protected final Attributes dcmItems;
 
-  public Module(Attributes dcmItems) {
-    if (dcmItems == null) {
-      throw new NullPointerException("dcmItems");
-    }
-    this.dcmItems = dcmItems;
+  public Module(Attributes attributes) {
+    this.dcmItems = Objects.requireNonNull(attributes);
   }
 
-  public Attributes getAttributes() {
+  /**
+   * Get the attributes. Direct modifications of the returned <tt>Attributes</tt> is strongly
+   * discouraged as it may cause inconsistencies in the internal state of this object.
+   *
+   * @return the attributes
+   */
+  public final Attributes getAttributes() {
     return dcmItems;
+  }
+
+  public final void removeAllSequenceItems(int SeqTag) {
+    Sequence seq = dcmItems.getSequence(SeqTag);
+    if (seq != null) {
+      seq.clear();
+    }
+  }
+
+  public final void removeSequenceItem(int SeqTag, int index) {
+    Sequence seq = dcmItems.getSequence(SeqTag);
+    if (seq != null && index < seq.size()) {
+      seq.remove(index);
+    }
+  }
+
+  public final void removeSequenceItem(int SeqTag, Attributes item) {
+    Sequence seq = dcmItems.getSequence(SeqTag);
+    if (seq != null) {
+      seq.remove(item);
+    }
   }
 
   protected void updateSequence(int tag, Module module) {
@@ -43,7 +68,7 @@ public class Module {
           // Copy attributes and set parent to null
           attributes = new Attributes(attributes);
         }
-        dcmItems.newSequence(tag, 1).add(attributes);
+        this.dcmItems.newSequence(tag, 1).add(attributes);
       }
     }
   }

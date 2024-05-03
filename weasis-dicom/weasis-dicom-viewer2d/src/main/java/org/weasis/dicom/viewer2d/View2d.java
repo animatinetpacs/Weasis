@@ -960,7 +960,7 @@ public class View2d extends DefaultView2d<DicomImageElement> {
       if (img instanceof DicomImageElement imageElement) {
         Plan orientation = ImageOrientation.getPlan(imageElement);
         if (orientation != null) {
-          if (Plan.AXIAL.equals(orientation)) {
+          if (Plan.TRANSVERSE.equals(orientation)) {
             sliceOrientation = SliceOrientation.AXIAL;
           } else if (Plan.CORONAL.equals(orientation)) {
             sliceOrientation = SliceOrientation.CORONAL;

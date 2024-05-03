@@ -506,7 +506,7 @@ public class InfoLayer extends AbstractInfoLayer<DicomImageElement> {
       if (plan != null) {
         if (view2DPane instanceof MprView) {
           Color planColor = null;
-          if (Plan.AXIAL.equals(plan)) {
+          if (Plan.TRANSVERSE.equals(plan)) {
             planColor = Biped.F.getColor();
           } else if (Plan.CORONAL.equals(plan)) {
             planColor = Biped.A.getColor();

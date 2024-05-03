@@ -24,8 +24,7 @@ public class SRDocumentContentModule extends Module {
   }
 
   public Code getNestedCode(int tag) {
-    Attributes item = dcmItems.getNestedDataset(tag);
-    return item != null ? new Code(item) : null;
+    return Code.getNestedCode(dcmItems, tag);
   }
 
   public String getValueType() {

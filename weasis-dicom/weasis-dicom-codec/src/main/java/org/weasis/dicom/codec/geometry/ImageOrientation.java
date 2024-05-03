@@ -32,11 +32,22 @@ import org.weasis.dicom.codec.geometry.PatientOrientation.Quadruped;
 public abstract class ImageOrientation {
 
   public enum Plan {
-    UNKNOWN,
-    AXIAL,
-    SAGITTAL,
-    CORONAL,
-    OBLIQUE
+    UNKNOWN("Unknown"),
+    TRANSVERSE("Axial"),
+    SAGITTAL("Sagittal"),
+    CORONAL("Coronal"),
+    OBLIQUE("Oblique");
+
+    private final String title;
+
+    Plan(String title) {
+      this.title = title;
+    }
+
+    @Override
+    public String toString() {
+      return title;
+    }
   }
 
   private static final double OBLIQUITY_THRESHOLD = 0.8;
@@ -69,22 +80,26 @@ public abstract class ImageOrientation {
    * no major axis applies and returning null.
    *
    * @param v the vector (direction cosine)
+   * @param minCosine the minimum cosine value to consider the vector as a major axis (0.8 is a good
+   *     value)
+   * @param quadruped true if subject is a quadruped rather than a biped
    * @return the string describing the orientation of the vector, or null if oblique
    */
-  private static Orientation getPatientOrientation(Vector3d v, boolean quadruped) {
+  private static Orientation getPatientOrientation(
+      Vector3d v, double minCosine, boolean quadruped) {
     double absX = Math.abs(v.x);
     double absY = Math.abs(v.y);
     double absZ = Math.abs(v.z);
 
-    if (absX > OBLIQUITY_THRESHOLD && absX > absY && absX > absZ) {
+    if (absX > minCosine && absX > absY && absX > absZ) {
       return quadruped
           ? PatientOrientation.getQuadrupedXOrientation(v)
           : PatientOrientation.getBipedXOrientation(v);
-    } else if (absY > OBLIQUITY_THRESHOLD && absY > absX && absY > absZ) {
+    } else if (absY > minCosine && absY > absX && absY > absZ) {
       return quadruped
           ? PatientOrientation.getQuadrupedYOrientation(v)
           : PatientOrientation.getBipedYOrientation(v);
-    } else if (absZ > OBLIQUITY_THRESHOLD && absZ > absX && absZ > absY) {
+    } else if (absZ > minCosine && absZ > absX && absZ > absY) {
       return quadruped
           ? PatientOrientation.getQuadrupedZOrientation(v)
           : PatientOrientation.getBipedZOrientation(v);
@@ -101,18 +116,53 @@ public abstract class ImageOrientation {
    *
    * @param vr the row vector
    * @param vc the column vector
-   * @return the string describing the plane of orientation, AXIAL, CORONAL, SAGITTAL or OBLIQUE
+   * @return the string describing the plane of orientation, TRANSVERSE, CORONAL, SAGITTAL or
+   *     OBLIQUE
    */
   public static Plan getPlan(Vector3d vr, Vector3d vc) {
-    Orientation rowAxis = getPatientOrientation(vr, false);
-    Orientation colAxis = getPatientOrientation(vc, false);
+    return getPlan(vr, vc, OBLIQUITY_THRESHOLD);
+  }
+
+  /**
+   * Get a plan describing the axial, coronal or sagittal plane from row and column unit vectors
+   * (direction cosines) as found in ImageOrientationPatient.
+   *
+   * <p>Some degree of deviation from one of the standard orthogonal planes is allowed before
+   * deciding the plane is OBLIQUE.
+   *
+   * @param vr the row vector
+   * @param vc the column vector
+   * @param minCosine the minimum cosine value to consider the vector as a major axis (0.8 is a good
+   *     value)
+   * @return the string describing the plane of orientation, TRANSVERSE, CORONAL, SAGITTAL or
+   *     OBLIQUE
+   */
+  public static Plan getPlan(Vector3d vr, Vector3d vc, double minCosine) {
+    Orientation rowAxis = getPatientOrientation(vr, minCosine, false);
+    Orientation colAxis = getPatientOrientation(vc, minCosine, false);
+    return getPlan(rowAxis, colAxis);
+  }
+
+  /**
+   * Get a plan describing the axial, coronal or sagittal plane from row and column unit vectors
+   * (direction cosines) as found in ImageOrientationPatient.
+   *
+   * <p>Some degree of deviation from one of the standard orthogonal planes is allowed before
+   * deciding the plane is OBLIQUE.
+   *
+   * @param rowAxis the row orientation
+   * @param colAxis the column orientation
+   * @return the string describing the plane of orientation, TRANSVERSE, CORONAL, SAGITTAL or
+   *     OBLIQUE
+   */
+  public static Plan getPlan(Orientation rowAxis, Orientation colAxis) {
     if (rowAxis != null && colAxis != null) {
       if (rowAxis.getColor().equals(PatientOrientation.blue)
           && colAxis.getColor().equals(PatientOrientation.red)) {
-        return Plan.AXIAL;
+        return Plan.TRANSVERSE;
       } else if (colAxis.getColor().equals(PatientOrientation.blue)
           && rowAxis.getColor().equals(PatientOrientation.red)) {
-        return Plan.AXIAL;
+        return Plan.TRANSVERSE;
       } else if (rowAxis.getColor().equals(PatientOrientation.blue)
           && colAxis.getColor().equals(PatientOrientation.green)) {
         return Plan.CORONAL;
